@@ -5,7 +5,7 @@ require ('dotenv').config();
 const config = {
   name: 'BikeStoreMongoDB',
   connector: 'mongodb',
-  url: `mongodb+srv://${process.env.PASSWORK_DB}@desarrollowebquihuang.44kwktd.mongodb.net/BikeStoreDB`,
+  url: `mongodb+srv://${process.env.PASSWORD_DB}@desarrollowebquihuang.44kwktd.mongodb.net/BikeStoreDB`,
   host: '',
   port: 0,
   user: '',
