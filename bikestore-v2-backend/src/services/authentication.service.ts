@@ -3,11 +3,10 @@ import passwordGenerator from 'password-generator';
 import CryptoJS from 'crypto-js';
 import jwt from 'jsonwebtoken';
 import {Workers} from '../models';
+import {environment} from '../config/enviroment';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AuthenticationService {
-  private secretKey = String(process.env.SECRET_KEY);
-
   constructor(/* Add @inject to inject parameters */) {}
 
   createPassword() {
@@ -17,7 +16,7 @@ export class AuthenticationService {
   encryptPassword(password: string) {
     let encryptedData = CryptoJS.AES.encrypt(
       password,
-      this.secretKey,
+      environment.secretKeyAES,
     ).toString();
     return encryptedData;
   }
@@ -25,19 +24,19 @@ export class AuthenticationService {
   encryptObject(data: any) {
     let encryptedData = CryptoJS.AES.encrypt(
       JSON.stringify(data),
-      this.secretKey,
+      environment.secretKeyAES,
     ).toString();
     return encryptedData;
   }
 
   decryptPassword(password: string) {
-    let bytes = CryptoJS.AES.decrypt(password, this.secretKey);
+    let bytes = CryptoJS.AES.decrypt(password, environment.secretKeyAES);
     let decryptedData = bytes.toString(CryptoJS.enc.Utf8);
     return decryptedData;
   }
 
   decryptObject(data: string) {
-    let bytes = CryptoJS.AES.decrypt(data, this.secretKey);
+    let bytes = CryptoJS.AES.decrypt(data, environment.secretKeyAES);
     let encryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
     return encryptedData;
   }
@@ -49,7 +48,7 @@ export class AuthenticationService {
         lastName: worker.lastName,
         id: worker.id,
       },
-      this.secretKey,
+      environment.secretKeyAES,
       {expiresIn: '1h'},
     );
     return token;
@@ -66,7 +65,7 @@ export class AuthenticationService {
       {
         data: this.encryptObject(datos),
       },
-      this.secretKey,
+      environment.secretKeyAES,
       {expiresIn: '1h'},
     );
     return token;
@@ -74,7 +73,7 @@ export class AuthenticationService {
 
   validateTokenJWT(token: string) {
     try {
-      let valid = jwt.verify(token, this.secretKey);
+      let valid = jwt.verify(token, environment.secretKeyAES);
       return valid;
     } catch {
       return false;
