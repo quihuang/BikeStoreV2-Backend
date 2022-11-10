@@ -4,10 +4,10 @@ import CryptoJS from 'crypto-js';
 import jwt from 'jsonwebtoken';
 import { Workers } from '../models';
 
-@injectable({ scope: BindingScope.TRANSIENT })
+@injectable({scope: BindingScope.TRANSIENT})
 export class AuthenticationService {
   private secretkey: string;
-
+  
   constructor(/* Add @inject to inject parameters */) {
     this.secretkey = String(process.env.SECRET_KEY);
   }
