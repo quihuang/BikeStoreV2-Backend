@@ -16,15 +16,41 @@ import {
   del,
   requestBody,
   response,
+  HttpErrors,
 } from '@loopback/rest';
-import {Workers} from '../models';
+import {User, Workers} from '../models';
 import {WorkersRepository} from '../repositories';
+import {AuthenticationService} from '../services';
+import {service} from '@loopback/core';
 
 export class WorkersController {
   constructor(
+    @service(AuthenticationService)
+    public authenticationService: AuthenticationService,
     @repository(WorkersRepository)
-    public workersRepository : WorkersRepository,
+    public workersRepository: WorkersRepository,
   ) {}
+
+  @post('/login')
+  @response(200, {
+    description: 'Successful login',
+  })
+  async login(@requestBody() user: User) {
+    const worker = await this.authenticationService.login(
+      user.email,
+      user.password,
+    );
+
+    if (worker) {
+      const token = this.authenticationService.generateTokenJWTObject(worker);
+      return {
+        data: worker,
+        token: token,
+      };
+    } else {
+      throw new HttpErrors[401]('The data entered is not valid!');
+    }
+  }
 
   @post('/workers')
   @response(200, {
@@ -44,6 +70,18 @@ export class WorkersController {
     })
     workers: Omit<Workers, 'id'>,
   ): Promise<Workers> {
+    const valid = await this.workersRepository.findOne({
+      where: {email: workers.email},
+    });
+    console.log(valid);
+    if (valid != null) {
+      throw new HttpErrors[401](
+        "the entered email is already registered in the database",
+      );
+    }
+    workers.password = this.authenticationService.encryptObject(
+      workers.password,
+    );
     return this.workersRepository.create(workers);
   }
 
@@ -52,9 +90,7 @@ export class WorkersController {
     description: 'Workers model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Workers) where?: Where<Workers>,
-  ): Promise<Count> {
+  async count(@param.where(Workers) where?: Where<Workers>): Promise<Count> {
     return this.workersRepository.count(where);
   }
 
@@ -106,7 +142,8 @@ export class WorkersController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Workers, {exclude: 'where'}) filter?: FilterExcludingWhere<Workers>
+    @param.filter(Workers, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Workers>,
   ): Promise<Workers> {
     return this.workersRepository.findById(id, filter);
   }
