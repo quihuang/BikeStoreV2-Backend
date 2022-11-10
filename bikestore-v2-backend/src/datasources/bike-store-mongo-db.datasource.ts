@@ -1,6 +1,5 @@
 import {inject, lifeCycleObserver, LifeCycleObserver} from '@loopback/core';
 import {juggler} from '@loopback/repository';
-require('dotenv').config();
 import {environment} from '../config/enviroment';
 
 const config = {
