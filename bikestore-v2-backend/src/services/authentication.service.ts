@@ -6,13 +6,16 @@ import {Workers} from '../models';
 import {environment} from '../config/enviroment';
 import {WorkersRepository} from '../repositories';
 import {repository} from '@loopback/repository';
+import sgMail from '@sendgrid/mail';
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class AuthenticationService {
   constructor(
     @repository(WorkersRepository)
     public workersRepository: WorkersRepository,
-  ) {}
+  ) {
+    sgMail.setApiKey(environment.apiKeySendGrid);
+  }
 
   createPassword() {
     return passwordGenerator(12, false);
@@ -51,7 +54,7 @@ export class AuthenticationService {
       const worker = await this.workersRepository.findOne({
         where: {email: email},
       });
-      if (worker != null) {
+      if (worker != null && worker.password) {
         const decryptedPassword = this.decryptObject(worker.password);
 
         // eslint-disable-next-line eqeqeq
@@ -105,5 +108,24 @@ export class AuthenticationService {
     } catch {
       return false;
     }
+  }
+
+  sendEmail(to: string, subject: string, message: string) {
+    const msg = {
+      to: to,
+      from: environment.senderSendGrid,
+      subject: subject,
+      text: message,
+      html: message,
+    };
+
+    sgMail
+      .send(msg)
+      .then(() => {
+        console.log('Email sent');
+      })
+      .catch((error: any) => {
+        console.error(error);
+      });
   }
 }

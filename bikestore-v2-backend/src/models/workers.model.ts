@@ -63,7 +63,7 @@ export class Workers extends Entity {
     type: 'string',
     required: true,
   })
-  password: string;
+  password?: string;
 
   @property({
     type: 'string',
