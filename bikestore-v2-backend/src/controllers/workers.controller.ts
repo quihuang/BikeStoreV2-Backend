@@ -43,8 +43,14 @@ export class WorkersController {
 
     if (worker) {
       const token = this.authenticationService.generateTokenJWTObject(worker);
+
       return {
-        data: worker,
+        data: {
+          id: worker.id,
+          name: worker.name,
+          email: worker.email,
+          phoneNumber: worker.phoneNumber,
+        },
         token: token,
       };
     } else {
@@ -63,7 +69,7 @@ export class WorkersController {
         'application/json': {
           schema: getModelSchemaRef(Workers, {
             title: 'NewWorkers',
-            exclude: ['id'],
+            exclude: ['id', 'password'],
           }),
         },
       },
@@ -73,15 +79,57 @@ export class WorkersController {
     const valid = await this.workersRepository.findOne({
       where: {email: workers.email},
     });
-    console.log(valid);
     if (valid != null) {
       throw new HttpErrors[401](
-        "the entered email is already registered in the database",
+        'the entered email is already registered in the database',
       );
     }
+
+    workers.password = this.authenticationService.createPassword();
+
+    let message = `
+    <tbody>
+    <tr>
+      <td align="left" bgcolor="#2E51A2" height="56" style="padding-left:24px">
+        <a href="https://bikestore.com/" style="color:#ffffff"
+          target="_blank"
+          data-saferedirecturl="https://www.google.com/url?q=https://bikestore.com/">
+          <h3>Welcome to the BikeStore app</h3></a>
+      </td>
+    </tr>
+
+    <tr>
+      <td align="left" bgcolor="#FFFFFF" style="padding:24px">
+        <div style="font-size:12px;color:#323232">
+          <div style="line-height:24px">
+            Hello ${workers.name} ${workers.lastName},
+            <br>
+            <br>
+            Thank you for signing up to BikeStore.com<br>
+            Your account is now active, with the role <strong>${workers.role}</strong> and your password is <strong>${workers.password}</strong>
+          </div>
+        </div>
+        <div style="display:block;padding-top:20px;text-align:center">
+          <br>
+          <a href="https://bikestore.com/"
+            style="display:inline-block;background-color:#2e51a2;padding:4px 8px;color:#ffffff;font-size:12px;text-decoration:none"
+            target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://bikestore.com/">Go to
+            BikeStore.com</a>
+          <br>
+          <br>
+        </div>
+    </tbody>
+`;
+    this.authenticationService.sendEmail(
+      workers.email,
+      'Welcome to the BikeStore app',
+      message,
+    );
+
     workers.password = this.authenticationService.encryptObject(
       workers.password,
     );
+
     return this.workersRepository.create(workers);
   }
 
