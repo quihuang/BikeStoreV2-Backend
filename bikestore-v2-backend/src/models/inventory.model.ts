@@ -27,7 +27,7 @@ export class Inventory extends Entity {
     type: 'string',
     required: true,
   })
-  existence: string;
+  existence: number;
 
   @property({
     type: 'string',
