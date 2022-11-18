@@ -17,3 +17,4 @@ export * from './inventory-sales.controller';
 export * from './inventory.controller';
 export * from './invoices.controller';
 export * from './sales.controller';
+export * from './sale.controller';
